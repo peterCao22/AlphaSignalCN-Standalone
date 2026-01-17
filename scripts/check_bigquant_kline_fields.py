@@ -2,7 +2,11 @@
 检查BigQuant的cn_stock_bar1d表包含哪些字段
 """
 import sys
-sys.path.insert(0, 'D:\\myCursor\\StockAiNews')
+from pathlib import Path
+
+# 统一以本仓库根目录为准（AlphaSignalCN-Standalone）
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
 
 from bigquantdai import dai
 

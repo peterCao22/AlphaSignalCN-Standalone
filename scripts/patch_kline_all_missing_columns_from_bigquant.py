@@ -12,7 +12,7 @@
 - 更省内存：读取本地 kline_all.csv 分块 join，再写临时文件；不会把“本地+补列”全量同时 merge 到一个大 DataFrame
 
 用法：
-cd TradingAgents-chinese-market/AlphaSignal-CN
+cd d:/myCursor/AlphaSignalCN-Standalone
 python scripts/patch_kline_all_missing_columns_from_bigquant.py --start-date 2023-01-01 --end-date 2026-01-14 --batch-days 120
 
 默认：

@@ -3,9 +3,9 @@
 
 数据来源：cn_stock_index_concept_component
 用法示例：
-  python TradingAgents-chinese-market/AlphaSignal-CN/scripts/check_bigquant_concepts.py --symbol 300346.SZ
-  python TradingAgents-chinese-market/AlphaSignal-CN/scripts/check_bigquant_concepts.py --symbol 300346 --days 60
-  python TradingAgents-chinese-market/AlphaSignal-CN/scripts/check_bigquant_concepts.py --symbol 300346.SZ --date 2026-01-15
+  python scripts/check_bigquant_concepts.py --symbol 300346.SZ
+  python scripts/check_bigquant_concepts.py --symbol 300346 --days 60
+  python scripts/check_bigquant_concepts.py --symbol 300346.SZ --date 2026-01-15
 """
 
 from __future__ import annotations

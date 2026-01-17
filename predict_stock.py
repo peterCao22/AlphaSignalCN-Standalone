@@ -8,13 +8,23 @@ import sys
 import argparse
 import asyncio
 
-# 添加项目路径
-project_root = os.path.abspath('d:/myCursor/StockAiNews')
-scripts_path = os.path.abspath('d:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/scripts')
+from pathlib import Path
 
-# 确保路径在导入前添加
-sys.path.insert(0, project_root)
-sys.path.insert(0, scripts_path)
+# =========================
+# 项目根目录统一口径
+# - 以本仓库（AlphaSignalCN-Standalone）为根目录
+# - 避免硬编码到其他仓库路径
+# =========================
+REPO_ROOT = Path(__file__).resolve().parent
+SCRIPTS_DIR = REPO_ROOT / "scripts"
+DATA_DIR = REPO_ROOT / "data"
+RAW_DIR = DATA_DIR / "raw"
+RESULTS_DIR = REPO_ROOT / "results"
+TEMP_DIR = DATA_DIR / "temp"
+
+# 确保路径在导入前添加（pattern_matcher.py 位于 scripts/）
+sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(SCRIPTS_DIR))
 
 # 导入本地模块
 from pattern_matcher import PatternMatcher  # type: ignore
@@ -80,7 +90,7 @@ def fetch_local_data(symbol):
     logging.info(f"正在从本地加载 {symbol} 的数据...")
     
     # 1. 【优化】加载 K 线数据：默认只读 kline_all.csv（避免误读其他文件）
-    kline_dir = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/data/raw/kline'
+    kline_dir = str(RAW_DIR / "kline")
     kline_path = get_kline_main_file(kline_dir)
     
     df_kline = None
@@ -105,7 +115,7 @@ def fetch_local_data(symbol):
         return None, None, None
     
     # 2. 【优化】加载筹码数据：智能选择最新文件
-    chips_dir = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/data/raw'
+    chips_dir = str(RAW_DIR)
     chips_path = get_latest_file(chips_dir, 'chips*.csv')
     
     df_chips = pd.DataFrame()
@@ -124,7 +134,7 @@ def fetch_local_data(symbol):
         logging.warning("未找到筹码数据文件")
     
     # 3. 【优化】加载龙虎榜数据：智能选择最新文件
-    dragon_dir = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/data/raw/limit_up'
+    dragon_dir = str(RAW_DIR / "limit_up")
     dragon_path = get_latest_file(dragon_dir, 'dragon_list*.csv')
     
     df_dragon = pd.DataFrame()
@@ -339,7 +349,7 @@ async def check_and_supplement_data(symbol, supplement_service):
     stock_code = symbol.split('.')[0]  # 提取6位股票代码
     
     # 【优化】检查K线数据：默认只读 kline_all.csv（避免误读其他文件）
-    kline_dir = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/data/raw/kline'
+    kline_dir = str(RAW_DIR / "kline")
     kline_path = get_kline_main_file(kline_dir)
     
     needs_supplement = False
@@ -429,7 +439,7 @@ async def check_and_supplement_data(symbol, supplement_service):
             logging.error(f"补充 {symbol} K线数据失败: {e}")
     
     # 【新增】检查筹码数据
-    chips_path = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/data/raw/chips_all.csv'
+    chips_path = str(RAW_DIR / "chips_all.csv")
     needs_chips_supplement = False
     
     if os.path.exists(chips_path):
@@ -532,7 +542,7 @@ def run_prediction(symbol, supplement_service=None, save_results=True, forced_tr
     
     # 保存临时数据供 PatternMatcher 使用
     # 【优化】使用固定的临时文件名，避免文件累积
-    temp_processed_dir = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/data/temp'
+    temp_processed_dir = str(TEMP_DIR)
     os.makedirs(temp_processed_dir, exist_ok=True)
     
     # 使用固定文件名，每次覆盖（而不是每个股票一个文件）
@@ -540,20 +550,20 @@ def run_prediction(symbol, supplement_service=None, save_results=True, forced_tr
     df_processed.to_csv(kline_temp_path, index=False)
     
     # 【优化】获取最新的筹码和龙虎榜数据文件路径
-    chips_dir = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/data/raw'
-    dragon_dir = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/data/raw/limit_up'
+    chips_dir = str(RAW_DIR)
+    dragon_dir = str(RAW_DIR / "limit_up")
     
     latest_chips_path = get_latest_file(chips_dir, 'chips*.csv')
     latest_dragon_path = get_latest_file(dragon_dir, 'dragon_list*.csv')
     
     # 如果没有找到，使用默认文件名（向后兼容）
     if not latest_chips_path:
-        latest_chips_path = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/data/raw/chips_all.csv'
+        latest_chips_path = str(RAW_DIR / "chips_all.csv")
     if not latest_dragon_path:
-        latest_dragon_path = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/data/raw/limit_up/dragon_list.csv'
+        latest_dragon_path = str(RAW_DIR / "limit_up" / "dragon_list.csv")
     
     # 初始化 PatternMatcher
-    base_dir = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN'
+    base_dir = str(REPO_ROOT)
     matcher = PatternMatcher(
         db_path=os.path.join(base_dir, 'data/historical_patterns.db'),
         processed_kline=kline_temp_path,
@@ -751,7 +761,7 @@ def save_prediction_result(result):
     - 同一个trigger_date下，同一个股票只保存一次（避免重复分析）
     - 不同trigger_date的分析会分别保存（连板股票会有多个分析）
     """
-    results_dir = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/results'
+    results_dir = str(RESULTS_DIR)
     os.makedirs(results_dir, exist_ok=True)
     
     # 【优化1】使用trigger_date（异动日期）作为文件名，而不是分析日期
@@ -794,6 +804,123 @@ def save_prediction_result(result):
         logging.info(f"[OK] 结果已保存: {results_file} (共{len(results)}只股票)")
     except Exception as e:
         logging.error(f"保存结果失败: {e}")
+
+
+def save_predictions_topk_for_date(trigger_date: str, results: list[dict], topk: int) -> str:
+    """
+    将某个 trigger_date 的结果写成单个文件（只保留 TOPK）。
+    输出：results/predictions_trigger_YYYYMMDD.json
+    """
+    results_dir = str(RESULTS_DIR)
+    os.makedirs(results_dir, exist_ok=True)
+
+    td = (trigger_date or "").strip()
+    if not td:
+        td = datetime.now().strftime("%Y-%m-%d")
+    td_str = td.replace("-", "")
+    out_file = os.path.join(results_dir, f"predictions_trigger_{td_str}.json")
+
+    cleaned = [r for r in results if isinstance(r, dict)]
+    cleaned.sort(key=lambda r: float(r.get("final_prob", 0.0) or 0.0), reverse=True)
+    picked = cleaned[: max(1, int(topk))]
+
+    with open(out_file, "w", encoding="utf-8") as f:
+        json.dump(picked, f, ensure_ascii=False, indent=2, default=str)
+
+    return out_file
+
+
+def _parse_yyyy_mm_dd(s: str) -> date_type:
+    return datetime.strptime(s, "%Y-%m-%d").date()
+
+
+def iter_trading_days_inclusive(start_date: str, end_date: str) -> list[date_type]:
+    """
+    生成 [start_date, end_date] 闭区间内的交易日列表：
+    - 优先使用 BigQuant all_trading_days（is_trading_day 内部实现）
+    - 失败则回退 weekday<5
+    """
+    start = _parse_yyyy_mm_dd(start_date)
+    end = _parse_yyyy_mm_dd(end_date)
+    if start > end:
+        start, end = end, start
+
+    out: list[date_type] = []
+    cur = start
+    while cur <= end:
+        if is_trading_day(cur):
+            out.append(cur)
+        cur = cur + timedelta(days=1)
+    return out
+
+
+def get_limit_up_stocks_for_date(
+    trade_date: date_type,
+    supplement_service: Layer3DataSupplement,
+    return_details: bool = False,
+):
+    """
+    获取指定交易日的涨停池（支持 Moma/智兔 自动切换）。
+    返回：
+    - stock_codes: list[str] （6位代码）
+    - details_map: dict[str, dict]（可选，板质量字段映射）
+    - trade_date_formatted: YYYY-MM-DD
+    """
+    trade_date_str = trade_date.strftime("%Y%m%d")
+    trade_date_formatted = trade_date.strftime("%Y-%m-%d")
+
+    def _call_once():
+        return supplement_service.api_adapter.get_limit_up_pool(trade_date_str)
+
+    try:
+        limit_up_list = _call_once()
+    except Exception as e:
+        msg = str(e)
+        # 配额/限流：切换 API 重试一次
+        if supplement_service._is_api_limit_error(msg):  # type: ignore
+            try:
+                supplement_service.switch_api()
+                limit_up_list = _call_once()
+            except Exception as e2:
+                logging.error(f"涨停池获取失败（已切换API仍失败） {trade_date_formatted}: {e2}")
+                limit_up_list = []
+        else:
+            logging.error(f"涨停池获取失败 {trade_date_formatted}: {e}")
+            limit_up_list = []
+
+    if not limit_up_list:
+        if return_details:
+            return [], {}, trade_date_formatted
+        return []
+
+    stock_codes: list[str] = []
+    details_map: dict[str, dict] = {}
+
+    for item in limit_up_list:
+        if not isinstance(item, dict):
+            continue
+
+        # 兼容 MomaAdapter / ZhituAdapter 返回字段
+        stock_code = str(item.get("stock_code") or item.get("code") or item.get("dm") or "").strip()
+        if not (len(stock_code) == 6 and stock_code.isdigit()):
+            continue
+
+        stock_codes.append(stock_code)
+
+        # 统一映射板质量字段（尽量从各种字段里取到）
+        details_map[stock_code] = {
+            "first_seal_time": item.get("first_seal_time", "") or item.get("fbt", "") or item.get("first_seal", ""),
+            "last_seal_time": item.get("last_seal_time", "") or item.get("lbt", "") or item.get("last_seal", ""),
+            "explosion_count": item.get("explosion_count", 0) or item.get("zbc", 0) or item.get("explosion", 0),
+            "seal_funds": item.get("seal_funds", 0.0) or item.get("zj", 0.0) or item.get("seal_amount", 0.0),
+            "turnover_rate": item.get("turnover_rate", 0.0) or item.get("hs", 0.0) or item.get("turnover", 0.0),
+            "consecutive_boards": item.get("consecutive_boards", 0) or item.get("lbc", 0),
+            "limit_up_statistics": item.get("limit_up_statistics", "") or item.get("tj", ""),
+        }
+
+    if return_details:
+        return stock_codes, details_map, trade_date_formatted
+    return stock_codes
 
 
 def get_yesterday_limit_up_stocks(force_today=False, return_details: bool = False):
@@ -873,7 +1000,7 @@ def get_analyzed_stocks(trigger_date):
     Returns:
         已分析的股票代码集合
     """
-    results_dir = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN/results'
+    results_dir = str(RESULTS_DIR)
     trigger_date_str = trigger_date.replace('-', '')
     results_file = os.path.join(results_dir, f'predictions_trigger_{trigger_date_str}.json')
     
@@ -901,6 +1028,11 @@ def main():
     parser = argparse.ArgumentParser(description='Predict stock second wave potential.')
     parser.add_argument('--symbol', type=str, help='Single stock symbol (e.g., 300034)')
     parser.add_argument('--batch', action='store_true', help='Batch analyze yesterday limit-up stocks')
+    parser.add_argument('--batch-range', action='store_true', help='Batch analyze limit-up stocks in a date range (trading days)')
+    parser.add_argument('--start-date', type=str, default=None, help='Range start date YYYY-MM-DD (for --batch-range)')
+    parser.add_argument('--end-date', type=str, default=None, help='Range end date YYYY-MM-DD (for --batch-range)')
+    parser.add_argument('--topk', type=int, default=3, help='Per-day keep TOPK (for --batch-range)')
+    parser.add_argument('--overwrite', action='store_true', help='Overwrite existing daily results files (for --batch-range)')
     parser.add_argument('--force-today', action='store_true', help='Force use today\'s data (even before 16:00)')
     parser.add_argument(
         '--force-refresh-from',
@@ -912,7 +1044,99 @@ def main():
     
     # 初始化数据补充服务
     supplement_service = Layer3DataSupplement(use_moma=True)
-    
+
+    if args.batch_range:
+        if not args.start_date or not args.end_date:
+            raise SystemExit("--batch-range requires --start-date and --end-date (YYYY-MM-DD)")
+
+        start_date = str(args.start_date)
+        end_date = str(args.end_date)
+        topk = max(1, int(args.topk))
+        overwrite = bool(args.overwrite)
+
+        trading_days = iter_trading_days_inclusive(start_date, end_date)
+        logging.info("=" * 80)
+        logging.info(f"区间批量模式：{start_date} ~ {end_date}（交易日={len(trading_days)}，TOPK={topk}）")
+        logging.info(f"写入目录：{RESULTS_DIR}")
+        logging.info("=" * 80)
+
+        for d in trading_days:
+            trigger_date = d.strftime("%Y-%m-%d")
+            trigger_date_str = trigger_date.replace("-", "")
+            out_file = Path(RESULTS_DIR) / f"predictions_trigger_{trigger_date_str}.json"
+
+            if out_file.exists() and (not overwrite):
+                logging.info(f"[SKIP] {trigger_date}: already exists -> {out_file}")
+                continue
+
+            # 1) 获取当日涨停池（支持API自动切换）
+            stock_codes, limit_up_details, trade_date_formatted = get_limit_up_stocks_for_date(
+                d, supplement_service, return_details=True
+            )
+            if not stock_codes:
+                logging.warning(f"[EMPTY] {trigger_date}: 无涨停池数据，跳过")
+                continue
+
+            logging.info("=" * 80)
+            logging.info(f"[DAY] {trigger_date}: 涨停池 {len(stock_codes)} 只")
+            logging.info("=" * 80)
+
+            # 2) 预补K线到 trigger_date（若本地已有更全数据，会自动跳过）
+            try:
+                target_date = pd.to_datetime(trigger_date, format="ISO8601")
+                end_date_kline = trigger_date
+                start_date_kline = (target_date.to_pydatetime() - timedelta(days=120)).strftime("%Y-%m-%d")
+                supplement_service.supplement_kline_data(
+                    stock_codes=stock_codes,
+                    start_date=start_date_kline,
+                    end_date=end_date_kline,
+                    force_refresh_from=args.force_refresh_from,
+                )
+            except Exception as e:
+                logging.warning(f"⚠️ {trigger_date}: K线预补失败: {e}（将继续按个股分析时按需补充）")
+
+            # 3) 龙虎榜：按 trigger_date 的近30天窗口补一次（本地已有更全时会自动跳过）
+            try:
+                end_d = trigger_date
+                start_d = (pd.to_datetime(trigger_date, format="ISO8601") - pd.Timedelta(days=30)).strftime("%Y-%m-%d")
+                supplement_service.supplement_dragon_list_data(start_date=start_d, end_date=end_d)
+            except Exception as e:
+                logging.warning(f"⚠️ {trigger_date}: 龙虎榜补充失败: {e}")
+
+            # 4) 批量分析（不走 save_prediction_result，最后统一写 TOPK 文件）
+            results: list[dict] = []
+            for i, stock_code in enumerate(stock_codes, 1):
+                logging.info(f"[{trigger_date}] [{i}/{len(stock_codes)}] 分析股票: {stock_code}")
+                try:
+                    r = run_prediction(
+                        stock_code,
+                        supplement_service=supplement_service,
+                        save_results=False,
+                        forced_trigger_date=trigger_date,
+                        limit_up_context=limit_up_details.get(stock_code),
+                    )
+                    if isinstance(r, dict):
+                        results.append(r)
+                except Exception as e:
+                    logging.error(f"{trigger_date} 分析 {stock_code} 失败: {e}")
+                    continue
+
+            if not results:
+                logging.warning(f"[EMPTY] {trigger_date}: 无有效预测结果，跳过写文件")
+                continue
+
+            # 5) 写入当日 TOPK
+            out_path = save_predictions_topk_for_date(trigger_date, results, topk=topk)
+
+            # 日内摘要
+            results.sort(key=lambda r: float(r.get("final_prob", 0.0) or 0.0), reverse=True)
+            summary = ", ".join([f"{r.get('symbol')}({float(r.get('final_prob', 0.0) or 0.0):.3f})" for r in results[:topk]])
+            logging.info(f"[OK] {trigger_date}: saved TOP{topk} -> {out_path}")
+            logging.info(f"[TOP{topk}] {trigger_date}: {summary}")
+
+        logging.info("[DONE] 区间批量完成")
+        return
+
     if args.batch:
         # 批量分析模式：获取涨停股票并逐个分析
         stock_codes, limit_up_details, trade_date_formatted = get_yesterday_limit_up_stocks(

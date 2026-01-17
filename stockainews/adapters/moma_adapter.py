@@ -424,52 +424,8 @@ class MomaAdapter:
                 params["lt"] = limit
             
             logger.debug(f"Requesting K-line data: endpoint={endpoint}, params={params}")
-            # #region agent log
-            import json
-            from datetime import datetime
-            try:
-                with open(r'd:\myCursor\StockAiNews\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                    f.write(json.dumps({
-                        "sessionId": "debug-session",
-                        "runId": "run1",
-                        "hypothesisId": "A",
-                        "location": "moma_adapter.py:424",
-                        "message": "K线API请求参数",
-                        "data": {
-                            "stock_code": stock_code,
-                            "moma_symbol": moma_symbol,
-                            "endpoint": endpoint,
-                            "params": params,
-                            "start_date": start_date,
-                            "end_date": end_date
-                        },
-                        "timestamp": int(datetime.now().timestamp() * 1000)
-                    }, ensure_ascii=False, default=str) + "\n")
-            except: pass
-            # #endregion
             
             response = self._make_request(endpoint, params=params)
-            
-            # #region agent log
-            try:
-                with open(r'd:\myCursor\StockAiNews\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                    f.write(json.dumps({
-                        "sessionId": "debug-session",
-                        "runId": "run1",
-                        "hypothesisId": "A",
-                        "location": "moma_adapter.py:445",
-                        "message": "K线API响应",
-                        "data": {
-                            "response_type": str(type(response)),
-                            "response_length": len(response) if isinstance(response, list) else None,
-                            "first_item": response[0] if isinstance(response, list) and len(response) > 0 else None,
-                            "last_item": response[-1] if isinstance(response, list) and len(response) > 0 else None,
-                            "full_response": response if not isinstance(response, list) or len(response) <= 3 else "too_long"
-                        },
-                        "timestamp": int(datetime.now().timestamp() * 1000)
-                    }, ensure_ascii=False, default=str) + "\n")
-            except: pass
-            # #endregion
             
             # 调试：检查响应格式
             logger.debug(f"API response type: {type(response)}")
@@ -537,34 +493,6 @@ class MomaAdapter:
                     "is_suspended": bool(item.get("sf", 0)),  # 停牌标志
                 }
                 kline_data.append(kline)
-            
-            # #region agent log
-            try:
-                date_range = None
-                if kline_data:
-                    dates = [k.get('date') for k in kline_data if k.get('date')]
-                    if dates:
-                        date_range = {"min": min(dates), "max": max(dates), "count": len(dates)}
-                
-                with open(r'd:\myCursor\StockAiNews\.cursor\debug.log', 'a', encoding='utf-8') as f:
-                    f.write(json.dumps({
-                        "sessionId": "debug-session",
-                        "runId": "run1",
-                        "hypothesisId": "A",
-                        "location": "moma_adapter.py:494",
-                        "message": "K线数据转换后",
-                        "data": {
-                            "stock_code": stock_code,
-                            "kline_count": len(kline_data),
-                            "date_range": date_range,
-                            "requested_start": start_date,
-                            "requested_end": end_date,
-                            "sample": kline_data[0] if kline_data else None
-                        },
-                        "timestamp": int(datetime.now().timestamp() * 1000)
-                    }, ensure_ascii=False, default=str) + "\n")
-            except: pass
-            # #endregion
             
             logger.info(f"Successfully fetched {len(kline_data)} kline records for {stock_code} (period={period}, adjust={adjust})")
             return kline_data

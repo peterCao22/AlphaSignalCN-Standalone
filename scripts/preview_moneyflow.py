@@ -9,9 +9,10 @@ import os
 import sys
 from datetime import datetime, timedelta
 
-# 添加项目路径
-project_root = os.path.abspath('d:/myCursor/StockAiNews')
-sys.path.insert(0, project_root)
+# 统一以本仓库根目录为准（AlphaSignalCN-Standalone）
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # 导入 BigQuant SDK
 try:
@@ -101,8 +102,10 @@ def preview_moneyflow_fields():
         print("=" * 80)
         print(df.iloc[:3, :10].to_string())
         
-        # 保存字段列表到文件
-        output_file = "data/moneyflow_fields.txt"
+        # 保存字段列表到文件（路径统一落在本仓库 data/ 目录下）
+        out_dir = REPO_ROOT / "data"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        output_file = str(out_dir / "moneyflow_fields.txt")
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(f"cn_stock_moneyflow 表字段列表\n")
             f.write(f"总计: {len(df.columns)} 个字段\n")

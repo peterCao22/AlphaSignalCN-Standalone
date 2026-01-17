@@ -19,9 +19,10 @@ import pandas as pd
 import logging
 from datetime import datetime, timedelta
 
-# 添加项目路径
-project_root = os.path.abspath('d:/myCursor/StockAiNews')
-sys.path.insert(0, project_root)
+# 统一以本仓库根目录为准（AlphaSignalCN-Standalone）
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # 导入 BigQuant SDK
 try:
@@ -113,8 +114,11 @@ def download_moneyflow(days_range=365, output_dir='data/raw', batch_days=60):
         batch_days: 每批下载天数（默认60天，避免超过200MB限制）
     """
     
-    os.makedirs(output_dir, exist_ok=True)
-    output_file = os.path.join(output_dir, 'moneyflow.csv')
+    out_dir = Path(output_dir)
+    if not out_dir.is_absolute():
+        out_dir = REPO_ROOT / out_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
+    output_file = str(out_dir / "moneyflow.csv")
     
     # 计算日期范围
     end_date = datetime.now()

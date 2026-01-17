@@ -19,9 +19,11 @@ import pandas as pd
 import logging
 from datetime import datetime, timedelta
 
-# 添加项目路径
-project_root = os.path.abspath('d:/myCursor/StockAiNews')
-sys.path.insert(0, project_root)
+# 添加项目路径（统一以本仓库根目录为准）
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
 
 # 导入 BigQuant SDK
 try:
@@ -411,8 +413,7 @@ def main():
     print(f"  - 竞价因子: 最近30天")
     
     # 设置输出目录
-    base_dir = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN'
-    output_dir = os.path.join(base_dir, 'data/raw')
+    output_dir = str(REPO_ROOT / "data" / "raw")
     print(f"  - 输出目录: {output_dir}")
     
     # 初始化下载器

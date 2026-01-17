@@ -65,8 +65,10 @@ class Layer3DataSupplement:
         """
         # 设置数据路径
         if base_path is None:
-            project_root = Path(__file__).parent.parent.parent
-            self.base_path = project_root / "TradingAgents-chinese-market" / "AlphaSignal-CN"
+            # 统一以本仓库根目录为 base_path（AlphaSignalCN-Standalone）
+            # __file__ = stockainews/services/layer3_data_supplement.py
+            # parent.parent.parent = repo root
+            self.base_path = Path(__file__).resolve().parent.parent.parent
         else:
             self.base_path = Path(base_path)
         

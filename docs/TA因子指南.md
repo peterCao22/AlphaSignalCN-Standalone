@@ -69,7 +69,7 @@
 conda activate rqsdk
 
 # 进入目录
-cd d:\myCursor\StockAiNews\TradingAgents-chinese-market\AlphaSignal-CN
+cd d:\myCursor\AlphaSignalCN-Standalone
 
 # 下载数据（默认最近90天）
 python scripts\download_ta_factors.py
@@ -132,7 +132,7 @@ python scripts\train_model.py
 ```batch
 @echo off
 call conda activate rqsdk
-cd /d D:\myCursor\StockAiNews\TradingAgents-chinese-market\AlphaSignal-CN
+cd /d D:\myCursor\AlphaSignalCN-Standalone
 python scripts\download_ta_factors.py >> logs\ta_factors_download.log 2>&1
 ```
 

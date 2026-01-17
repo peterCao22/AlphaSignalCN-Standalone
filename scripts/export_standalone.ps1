@@ -71,13 +71,12 @@ Copy-IfExists (Join-Path $Root "scripts") (Join-Path $Dest "scripts")
 
 # 1.1) 仅复制与 AlphaSignal-CN 预测链路相关的 stockainews 子集（不复制整个 stockainews）
 # 说明：
-# - stockainews 位于仓库根目录（相对 AlphaSignal-CN：..\..）
+# - stockainews 位于当前仓库根目录
 # - 这里只复制 adapters/core/crawlers(部分)/services 等必要模块
-$RepoRoot = Resolve-Path (Join-Path $Root "..\..") | Select-Object -ExpandProperty Path
-$StockAiNewsSrc = Join-Path $RepoRoot "stockainews"
+$StockAiNewsSrc = Join-Path $Root "stockainews"
 $StockAiNewsDst = Join-Path $Dest "stockainews"
 
-Write-Host "[INFO] Repo root   : $RepoRoot"
+Write-Host "[INFO] Repo root   : $Root"
 
 $StockAiNewsWhitelist = @(
   "__init__.py",

@@ -13,8 +13,12 @@ import httpx
 
 from stockainews.core.config import config
 from stockainews.core.logger import setup_logger
+from stockainews.core.exceptions import StockAiNewsError
 
 logger = setup_logger(__name__)
+
+class DailyQuotaExceededError(StockAiNewsError):
+    """智兔/数据服务：当日配额超限"""
 
 
 class ZhituAdapter:
@@ -195,7 +199,6 @@ class ZhituAdapter:
                     
                     if is_daily_quota_error:
                         error_str = f"{error_code}:{error_msg}" if error_code else str(error_msg)
-                        from src.adapters.exceptions import DailyQuotaExceededError
                         raise DailyQuotaExceededError(
                             f"智兔API当日请求已超限: {error_str}. "
                             f"请明天再试或联系API提供商增加配额。"
@@ -216,7 +219,6 @@ class ZhituAdapter:
                 # 如果返回的是字符串格式的错误（如 "101:Licence证书当日请求已超限"）
                 elif isinstance(result, str):
                     if '101' in result or '当日请求已超限' in result or 'licence证书当日请求已超限' in result.lower():
-                        from src.adapters.exceptions import DailyQuotaExceededError
                         raise DailyQuotaExceededError(
                             f"智兔API当日请求已超限: {result}. "
                             f"请明天再试或联系API提供商增加配额。"

@@ -25,8 +25,8 @@ class EnhancedFeaturesService:
             data_dir: 数据目录路径
         """
         if data_dir is None:
-            base_dir = 'd:/myCursor/StockAiNews/TradingAgents-chinese-market/AlphaSignal-CN'
-            data_dir = os.path.join(base_dir, 'data/raw')
+            repo_root = Path(__file__).resolve().parent.parent
+            data_dir = str(repo_root / "data" / "raw")
         
         self.data_dir = Path(data_dir)
         
