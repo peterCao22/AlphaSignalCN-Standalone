@@ -1,0 +1,8 @@
+-r requirements.txt
+
+# Optional: faster/more robust HTML parsing
+lxml>=5.0,<6.0
+
+# Dev tools (optional)
+pytest>=8,<9
+ruff>=0.3,<1.0
